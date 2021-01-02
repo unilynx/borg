@@ -645,7 +645,7 @@ class Archiver:
                                   numeric_owner=args.numeric_owner, noatime=not args.atime, noctime=args.noctime,
                                   progress=args.progress,
                                   chunker_params=args.chunker_params, start=t0, start_monotonic=t0_monotonic,
-                                  log_json=args.log_json)
+                                  log_json=args.log_json, working_directory=args.working_directory)
                 metadata_collector = MetadataCollector(noatime=not args.atime, noctime=args.noctime,
                     noflags=args.nobsdflags or args.noflags, numeric_owner=args.numeric_owner, nobirthtime=args.nobirthtime)
                 cp = ChunksProcessor(cache=cache, key=key,
@@ -653,7 +653,10 @@ class Archiver:
                     checkpoint_interval=args.checkpoint_interval, rechunkify=False)
                 fso = FilesystemObjectProcessors(metadata_collector=metadata_collector, cache=cache, key=key,
                     process_file_chunks=cp.process_file_chunks, add_item=archive.add_item,
-                    chunker_params=args.chunker_params, show_progress=args.progress, sparse=args.sparse)
+                    chunker_params=args.chunker_params, show_progress=args.progress, sparse=args.sparse,
+                    working_directory=args.working_directory)
+                if args.working_directory:  #explictly change to the given directory
+                    os.chdir(args.working_directory)
                 create_inner(archive, cache, fso)
         else:
             create_inner(None, None, None)
@@ -3340,6 +3343,8 @@ class Archiver:
                               help='stay in the same file system and do not store mount points of other file systems.  This might behave different from your expectations, see the docs.')
         fs_group.add_argument('--numeric-owner', dest='numeric_owner', action='store_true',
                               help='only store numeric user and group identifiers')
+        fs_group.add_argument('--working-directory', dest='working_directory',
+                              help='set working directory for archiving')
         # --noatime is the default now and the flag is deprecated. args.noatime is not used any more.
         # use --atime if you want to store the atime (default behaviour before borg 1.2.0a7)..
         fs_group.add_argument('--noatime', dest='noatime', action='store_true',

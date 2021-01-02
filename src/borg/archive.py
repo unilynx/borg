@@ -377,8 +377,11 @@ class Archive:
     def __init__(self, repository, key, manifest, name, cache=None, create=False,
                  checkpoint_interval=1800, numeric_owner=False, noatime=False, noctime=False, noflags=False,
                  progress=False, chunker_params=CHUNKER_PARAMS, start=None, start_monotonic=None, end=None,
-                 consider_part_files=False, log_json=False):
-        self.cwd = os.getcwd()
+                 consider_part_files=False, log_json=False, working_directory=None):
+        if working_directory:
+            self.cwd = working_directory
+        else:
+            self.cwd = os.getcwd()
         self.key = key
         self.repository = repository
         self.cache = cache
@@ -1172,7 +1175,8 @@ class FilesystemObjectProcessors:
 
     def __init__(self, *, metadata_collector, cache, key,
                  add_item, process_file_chunks,
-                 chunker_params, show_progress, sparse):
+                 chunker_params, show_progress, sparse,
+                 working_directory):
         self.metadata_collector = metadata_collector
         self.cache = cache
         self.key = key
@@ -1182,7 +1186,10 @@ class FilesystemObjectProcessors:
 
         self.hard_links = {}
         self.stats = Statistics()  # threading: done by cache (including progress)
-        self.cwd = os.getcwd()
+        if working_directory:
+            self.cwd = working_directory
+        else:
+            self.cwd = os.getcwd()
         self.chunker = get_chunker(*chunker_params, seed=key.chunk_seed, sparse=sparse)
 
     @contextmanager
